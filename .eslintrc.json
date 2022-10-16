@@ -19,9 +19,9 @@
         "trailingComma":"all",
         "endOfLine": "lf",
         "semi": true,
-        "singleQuote":true,
+        "singleQuote":false,
         "printWidth": 80,
-        "tabWidth": 4
+        "tabWidth": 2
       }
     ]
   }

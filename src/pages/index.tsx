@@ -1,31 +1,63 @@
+import type { NextPage, GetServerSideProps } from "next";
 import { useState } from "react";
 
-const IndexPage = () => {
-    const catImages: string[] = [
-        "https://idolmaster-official.jp/idolmaster/jp/article/1002/SHINYCOLORS/2022/04/%E7%94%BB%E5%83%8F%E2%91%A0_%E6%9D%9C%E9%87%8E%E5%87%9B%E4%B8%96%E3%83%95%E3%82%A3%E3%82%AE%E3%83%A5%E3%82%A2.jpg?_=1665931560",
-        "https://product.amiami.jp/amiami/project/rinze/assets/img/slider/1.jpg",
-        "https://idollist.idolmaster-official.jp/images/character_main/rinze_morino_02.jpg",
-        "https://idollist.idolmaster-official.jp/images/character_main/rinze_morino_01.jpg",
-        "https://shinycolors.idolmaster.jp/sp/static/img/hokagoclimaxgirls/rinze/gallery_01.jpg?220418"
-    ];
-    const [catImageUrl, setCatImageUrl] = useState(catImages[0]);
+interface CatCategory {
+  id: number;
+  name: string;
+}
 
-    const getRandomImage = (): string => {
-        const index = Math.floor(Math.random() * catImages.length);
-        return catImages[index];      
-    }
+interface SearchCatImage {
+  breeds: string[];
+  categories: CatCategory[];
+  id: string;
+  url: string;
+  width: number;
+  height: number;
+}
 
-    const getNewImage = () => {
-        setCatImageUrl(getRandomImage());
-    }
-    
-    return (
-        <div>
-            <button onClick={getNewImage}>画像が変わるよ</button>
-            <h1>画像が変わるよ</h1>
-            <img src={catImageUrl}></img>
-        </div>
-    );
+interface IndexPageProps {
+  initialCatImageUrl: string;
+}
+
+type SearchCatImageResponse = SearchCatImage[];
+
+const IndexPage: NextPage<IndexPageProps> = ({
+  initialCatImageUrl,
+}: IndexPageProps) => {
+  // 初期値として引数で受け取ったinitialCatImageUrlをセットする
+  // getServerSidePropsの返り値がページ読み込み時に受け取る
+  const [catImageUrl, setCatImageUrl] = useState(initialCatImageUrl);
+
+  const getNewImage = async () => {
+    //setCatImageUrl(getRandomImage());
+    const image = await fetchCatImage();
+    setCatImageUrl(image.url);
+  };
+
+  return (
+    <div>
+      <button onClick={getNewImage}>画像が変わるよ</button>
+      <h1>画像が変わるよ</h1>
+      <img src={catImageUrl} width={500} height="auto"></img>
+    </div>
+  );
+};
+
+const fetchCatImage = async (): Promise<SearchCatImage> => {
+  const res = await fetch("https://api.thecatapi.com/v1/images/search");
+  const result = (await res.json()) as SearchCatImageResponse;
+  return result[0];
+};
+
+export const getServerSideProps: GetServerSideProps<
+  IndexPageProps
+> = async () => {
+  const catImage = await fetchCatImage();
+  return {
+    props: {
+      initialCatImageUrl: catImage.url,
+    },
+  };
 };
 
 export default IndexPage;
